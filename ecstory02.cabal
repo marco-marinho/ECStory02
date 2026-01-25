@@ -1,0 +1,29 @@
+cabal-version: 3.14
+name: ecstory02
+version: 0.1.0.0
+build-type: Simple
+
+common warnings
+  ghc-options: -Wall
+
+library
+  exposed-modules:
+    Quest01
+    Util
+
+  hs-source-dirs: lib
+  build-depends:
+    base ^>=4.21.0.0,
+    split,
+
+  default-language: GHC2024
+
+executable ecstory02
+  import: warnings
+  main-is: Main.hs
+  build-depends:
+    base ^>=4.21.0.0,
+    ecstory02,
+
+  hs-source-dirs: app
+  default-language: GHC2024
