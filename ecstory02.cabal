@@ -7,12 +7,15 @@ common warnings
   ghc-options: -Wall
 
 library
+  import: warnings
   exposed-modules:
     Quest01
+    Quest02
     Util
 
   hs-source-dirs: lib
   build-depends:
+    array,
     base ^>=4.21.0.0,
     containers,
     hashable,

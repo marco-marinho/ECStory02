@@ -1,13 +1,10 @@
 module Quest01 where
 
 import Control.Monad.State (MonadState (get), State, evalState, modify)
-import Data.Function ((&))
 import Data.HashMap.Strict qualified as HM
 import Data.IntSet qualified as IS
-import Data.List (mapAccumL)
 import Data.List.Split (splitOn)
-import Debug.Trace (traceShowId)
-import GHC.Arr (Array, Ix, array, bounds, (!))
+import GHC.Arr (Array, array, bounds, (!))
 import Util (Grid, makeGrid, numCols, numRows, (??))
 
 type MemoKey = (IS.IntSet, Int)
@@ -95,4 +92,4 @@ solve :: String -> Int -> String
 solve input 1 = part1 input
 solve input 2 = part2 input
 solve input 3 = part3 input
-solve input _ = "Invalid part number"
+solve _ _ = "Invalid part number"

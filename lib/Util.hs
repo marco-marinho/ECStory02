@@ -1,6 +1,6 @@
 module Util where
 
-import GHC.Arr (Array, Ix, array, (!))
+import GHC.Arr (Array, array, (!))
 
 readInput :: Int -> Int -> IO String
 readInput quest part = readFile filePath
