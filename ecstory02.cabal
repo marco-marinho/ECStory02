@@ -11,6 +11,7 @@ library
   exposed-modules:
     Quest01
     Quest02
+    Quest03
     Util
 
   hs-source-dirs: lib
@@ -22,6 +23,7 @@ library
     mtl,
     split,
     unordered-containers,
+    parsec,
 
   default-language: GHC2024
 
