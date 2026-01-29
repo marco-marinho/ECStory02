@@ -1,5 +1,6 @@
 module Util where
 
+import Data.Char (digitToInt)
 import GHC.Arr (Array, array, (!))
 
 readInput :: Int -> Int -> IO String
@@ -30,3 +31,14 @@ makeGrid input = Grid numRows numCols (array bounds associations)
       x : _ -> length x
     bounds = ((0, 0), (numRows - 1, numCols - 1))
     associations = [((r, c), (ls !! r) !! c) | r <- [0 .. numRows - 1], c <- [0 .. numCols - 1]]
+
+makeIntGrid :: String -> Grid Int
+makeIntGrid input = Grid numRows numCols (array bounds associations)
+  where
+    ls = lines input
+    numRows = length ls
+    numCols = case ls of
+      [] -> 0
+      x : _ -> length x
+    bounds = ((0, 0), (numRows - 1, numCols - 1))
+    associations = [((r, c), digitToInt ((ls !! r) !! c)) | r <- [0 .. numRows - 1], c <- [0 .. numCols - 1]]

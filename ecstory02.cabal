@@ -21,9 +21,9 @@ library
     containers,
     hashable,
     mtl,
+    parsec,
     split,
     unordered-containers,
-    parsec,
 
   default-language: GHC2024
 

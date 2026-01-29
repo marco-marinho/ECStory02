@@ -1,10 +1,12 @@
 module Quest03 where
 
-import Data.Array (Array, listArray, (!))
+import Data.Array (Array, assocs, listArray, (!))
 import Data.Char (digitToInt)
+import Data.HashSet qualified as HS
 import Data.List (sortBy)
 import Text.Parsec
 import Text.Parsec.String (Parser)
+import Util (Grid, dataArray, makeIntGrid, numCols, numRows, (??))
 
 data Dice = Dice {index :: Int, faces :: Array Int Int, seed :: Int, pulse :: Int, roll :: Int, face :: Int} deriving (Show)
 
@@ -37,6 +39,14 @@ parseLinesWithTrack = do
   eof
   return (dices, map digitToInt track)
 
+parseLinesWithGrid :: Parser ([Dice], Grid Int)
+parseLinesWithGrid = do
+  dices <- parseDice `endBy` newline
+  _ <- spaces
+  gridLines <- many anyChar
+  eof
+  return (dices, makeIntGrid gridLines)
+
 parseInput :: String -> [Dice]
 parseInput input = case parse parseLines "" input of
   Left err -> error ("Parse error: " ++ show err)
@@ -44,6 +54,11 @@ parseInput input = case parse parseLines "" input of
 
 parseInputWithTrack :: String -> ([Dice], [Int])
 parseInputWithTrack input = case parse parseLinesWithTrack "" input of
+  Left err -> error ("Parse error: " ++ show err)
+  Right res -> res
+
+parseInputWithGrid :: String -> ([Dice], Grid Int)
+parseInputWithGrid input = case parse parseLinesWithGrid "" input of
   Left err -> error ("Parse error: " ++ show err)
   Right res -> res
 
@@ -88,6 +103,28 @@ sortScores (_, s1) (_, s2)
   | s1 > s2 = GT
   | otherwise = EQ
 
+filterPositions :: [(Int, Int)] -> Grid Int -> [(Int, Int)]
+filterPositions positions grid = filter (\(nr, nc) -> nr >= 0 && nr < numRows grid && nc >= 0 && nc < numCols grid) positions
+
+bfs :: Grid Int -> Dice -> HS.HashSet (Int, Int) -> HS.HashSet (Int, Int) -> HS.HashSet (Int, Int)
+bfs _ _ toVisit visited | HS.null toVisit = visited
+bfs grid dice toVisit visited = bfs grid nDice nextPositions newVisited
+  where
+    (_, nDice) = nextDice dice
+    valid_pos = HS.filter (\pos -> grid ?? pos == getCurrentFace dice) toVisit
+    newVisited = HS.union visited valid_pos
+    nextPositions =
+      HS.fromList
+        [ n
+        | (r, c) <- HS.toList valid_pos,
+          n <- filterPositions [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1), (r, c)] grid
+        ]
+
+bfsDice :: Grid Int -> Dice -> HS.HashSet (Int, Int)
+bfsDice grid dice = HS.unions $ map (\pos -> bfs grid dice (HS.fromList [pos]) HS.empty) startPositions
+  where
+    startPositions = [(r, c) | ((r, c), val) <- assocs (dataArray grid), val == getCurrentFace dice]
+
 part1 :: String -> String
 part1 input = show (reach10000 dices 0 0)
   where
@@ -100,8 +137,15 @@ part2 input = show order
     steps = map (\d -> raceTrack d track 0) dices
     order = map fst $ sortBy sortScores $ zip [1 ..] steps
 
+part3 :: String -> String
+part3 input = show (HS.size res)
+  where
+    (dices, grid) = parseInputWithGrid input
+    firstDices = map rollDice dices
+    res = HS.unions $ map (bfsDice grid) firstDices
+
 solve :: String -> Int -> String
 solve input 1 = part1 input
 solve input 2 = part2 input
-solve _ 3 = "rato"
+solve input 3 = part3 input
 solve _ _ = "Invalid part number"
