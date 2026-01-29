@@ -103,21 +103,21 @@ sortScores (_, s1) (_, s2)
   | s1 > s2 = GT
   | otherwise = EQ
 
-filterPositions :: [(Int, Int)] -> Grid Int -> [(Int, Int)]
-filterPositions positions grid = filter (\(nr, nc) -> nr >= 0 && nr < numRows grid && nc >= 0 && nc < numCols grid) positions
-
 bfs :: Grid Int -> Dice -> HS.HashSet (Int, Int) -> HS.HashSet (Int, Int) -> HS.HashSet (Int, Int)
 bfs _ _ toVisit visited | HS.null toVisit = visited
 bfs grid dice toVisit visited = bfs grid nDice nextPositions newVisited
   where
     (_, nDice) = nextDice dice
-    valid_pos = HS.filter (\pos -> grid ?? pos == getCurrentFace dice) toVisit
+    currFace = getCurrentFace dice
+    valid_pos = HS.filter (\pos -> grid ?? pos == currFace) toVisit
     newVisited = HS.union visited valid_pos
     nextPositions =
       HS.fromList
         [ n
         | (r, c) <- HS.toList valid_pos,
-          n <- filterPositions [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1), (r, c)] grid
+          n <- [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1), (r, c)],
+          let (nr, nc) = n,
+          nr >= 0 && nr < numRows grid && nc >= 0 && nc < numCols grid
         ]
 
 bfsDice :: Grid Int -> Dice -> HS.HashSet (Int, Int)
