@@ -8,6 +8,10 @@ common warnings
 
 library
   import: warnings
+  ghc-options:
+    -threaded
+    -O2
+
   exposed-modules:
     Quest01
     Quest02
@@ -16,19 +20,27 @@ library
 
   hs-source-dirs: lib
   build-depends:
-    array,
     base ^>=4.21.0.0,
+    array,
     containers,
     hashable,
     mtl,
     parsec,
     split,
     unordered-containers,
+    parallel,
+    deepseq,
 
   default-language: GHC2024
 
 executable ecstory02
   import: warnings
+  ghc-options:
+    -threaded
+    -rtsopts
+    -with-rtsopts=-N
+    -O2
+
   main-is: Main.hs
   build-depends:
     base ^>=4.21.0.0,

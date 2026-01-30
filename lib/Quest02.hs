@@ -61,15 +61,15 @@ countCircularST input = runST $ do
   loop totalLen 0 'R' 0
 
 part1 :: String -> String
-part1 input = show (countBolts input 'R')
+part1 input = show $ countBolts input 'R'
 
 part2 :: String -> String
-part2 input = show (countBoltsCircular seqInput 'R')
+part2 input = show $ countBoltsCircular seqInput 'R'
   where
     seqInput = SQ.fromList $ take (100 * length input) (cycle input)
 
 part3 :: String -> String
-part3 input = show (countCircularST repInput)
+part3 input = show $ countCircularST repInput
   where
     repInput = take (100000 * length input) (cycle input)
 

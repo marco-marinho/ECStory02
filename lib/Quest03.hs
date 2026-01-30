@@ -1,10 +1,25 @@
 module Quest03 where
 
+import Control.Parallel.Strategies (parMap, rdeepseq)
 import Data.Array (Array, assocs, listArray, (!))
 import Data.Char (digitToInt)
-import Data.HashSet qualified as HS
+import Data.IntSet qualified as IS
 import Data.List (sortBy)
 import Text.Parsec
+  ( anyChar,
+    char,
+    digit,
+    endBy,
+    eof,
+    many,
+    many1,
+    newline,
+    option,
+    parse,
+    sepBy,
+    spaces,
+    string,
+  )
 import Text.Parsec.String (Parser)
 import Util (Grid, dataArray, makeIntGrid, numCols, numRows, (??))
 
@@ -103,30 +118,32 @@ sortScores (_, s1) (_, s2)
   | s1 > s2 = GT
   | otherwise = EQ
 
-bfs :: Grid Int -> Dice -> HS.HashSet (Int, Int) -> HS.HashSet (Int, Int) -> HS.HashSet (Int, Int)
-bfs _ _ toVisit visited | HS.null toVisit = visited
-bfs grid dice toVisit visited = bfs grid nDice nextPositions newVisited
+bfs :: Grid Int -> Int -> Dice -> IS.IntSet -> IS.IntSet -> IS.IntSet
+bfs _ _ _ toVisit visited | IS.null toVisit = visited
+bfs grid nCols dice toVisit visited = bfs grid nCols nDice nToVisit nVisited
   where
     (_, nDice) = nextDice dice
     currFace = getCurrentFace dice
-    valid_pos = HS.filter (\pos -> grid ?? pos == currFace) toVisit
-    newVisited = HS.union visited valid_pos
-    nextPositions =
-      HS.fromList
-        [ n
-        | (r, c) <- HS.toList valid_pos,
-          n <- [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1), (r, c)],
-          let (nr, nc) = n,
+    validPos = IS.filter (\pos -> grid ?? (pos `divMod` nCols) == currFace) toVisit
+    nVisited = IS.union visited validPos
+    nToVisit =
+      IS.fromList
+        [ nr * nCols + nc
+        | flatPos <- IS.toList validPos,
+          let (r, c) = flatPos `divMod` nCols,
+          (nr, nc) <- [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1), (r, c)],
           nr >= 0 && nr < numRows grid && nc >= 0 && nc < numCols grid
         ]
 
-bfsDice :: Grid Int -> Dice -> HS.HashSet (Int, Int)
-bfsDice grid dice = HS.unions $ map (\pos -> bfs grid dice (HS.fromList [pos]) HS.empty) startPositions
+bfsDice :: Grid Int -> Dice -> IS.IntSet
+bfsDice grid dice = bfs grid nCols dice (IS.fromList startPositions) IS.empty
   where
-    startPositions = [(r, c) | ((r, c), val) <- assocs (dataArray grid), val == getCurrentFace dice]
+    currFace = getCurrentFace dice
+    nCols = numCols grid
+    startPositions = [r * nCols + c | ((r, c), val) <- assocs (dataArray grid), val == currFace]
 
 part1 :: String -> String
-part1 input = show (reach10000 dices 0 0)
+part1 input = show $ reach10000 dices 0 0
   where
     dices = parseInput input
 
@@ -138,11 +155,11 @@ part2 input = show order
     order = map fst $ sortBy sortScores $ zip [1 ..] steps
 
 part3 :: String -> String
-part3 input = show (HS.size res)
+part3 input = show $ IS.size res
   where
     (dices, grid) = parseInputWithGrid input
     firstDices = map rollDice dices
-    res = HS.unions $ map (bfsDice grid) firstDices
+    res = IS.unions $ parMap rdeepseq (bfsDice grid) firstDices
 
 solve :: String -> Int -> String
 solve input 1 = part1 input
